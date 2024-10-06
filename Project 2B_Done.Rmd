@@ -1,0 +1,69 @@
+---
+title: "Project 2B"
+output: html_document
+date: "2024-10-06"
+---
+
+```{r setup, include=TRUE}
+library(tidyverse)
+library(readr) 
+library(tidyr) 
+library(dplyr)
+
+Movie_data <- read.csv("C:/Users/dbrusche/Desktop/movies (2).csv", sep = ";")
+
+head(Movie_data)
+
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars, echo=TRUE}
+movie_long <- Movie_data %>%
+  pivot_longer(
+    cols = starts_with("Action"):starts_with("Western"),
+    names_to = "category",
+    values_to = "is_in_category"
+  ) %>%
+  filter(is_in_category == 1) %>%
+  select(Name, ReleaseDate, AvgRating, Watches, category)
+
+
+selected_data <- movie_long %>%
+  filter(ReleaseDate == 1995 & 
+         category %in% c("Drama", "Crime", "Comedy", "Romance", "Children"))
+
+average_ratings <- selected_data %>%
+  group_by(category) %>%
+  summarise(avg_rating = mean(AvgRating, na.rm = TRUE))
+
+#I first converted my movie data into a long format by consolidating the individual columns of movie categories into a single category column. Next, I filtered the long dataset to focus on the year 1995 and specific categories: Drama, Crime, Comedy, Romance, and Children. Lastly, I calculated the average rating for these categories to visualize the results.
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=TRUE}
+# Load necessary libraries
+library(ggplot2)
+
+# Create a bar plot for the count of movies by category
+
+ggplot(average_ratings, aes(x = category, y = avg_rating)) +
+  geom_bar(stat = "identity", fill = "lightblue") +
+  labs(
+    title = "Average Ratings by Movie Category (1995)",
+    x = "Category",
+    y = "Average Rating"
+  ) +
+  theme_minimal()
+
+#From the graph, we can see that in 1995, Crime movies were the most popular, with an average rating of 3.41, followed by Drama at 3.28, Romance at 3.18, Comedy at 3.07, and Children at 2.84.
+
+
+```

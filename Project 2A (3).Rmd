@@ -1,0 +1,135 @@
+---
+title: "Project 2 DONE"
+output: html_document
+date: "2024-10-05"
+---
+
+```{r setup, include=TRUE}
+library(tidyverse)
+library(readr) 
+library(tidyr) 
+library(dplyr)
+Motor_accidents <-  read.csv("C:/Users/dbrusche/Desktop/Motor_Vehicle_Collisions_-_Crashes_20241005.csv")
+
+ # Display the first few rows and columns
+head(Motor_accidents)
+
+
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars, echo=TRUE}
+
+# Convert date column to Date type
+Motor_accidents$CRASH.DATE <- as.Date(Motor_accidents$CRASH.DATE)
+
+# Extract day of the week
+Motor_accidents$Daysoftheweek <- weekdays(Motor_accidents$CRASH.DATE)
+
+# Select relevant columns
+Motor_accidents2<- Motor_accidents %>%
+  select(BOROUGH, CRASH.DATE, LATITUDE, LONGITUDE, CONTRIBUTING.FACTOR.VEHICLE.1, VEHICLE.TYPE.CODE.1,Daysoftheweek)
+
+
+# Filter out rows with missing values in key columns
+Motor_accidents2 <- Motor_accidents2 %>%
+  filter(!is.na(BOROUGH), 
+         !is.na(LATITUDE), 
+         !is.na(LONGITUDE), 
+         !is.na(CRASH.DATE), 
+         !is.na(VEHICLE.TYPE.CODE.1), 
+         !is.na(CONTRIBUTING.FACTOR.VEHICLE.1))
+
+#removing Rows that does not have boroughs 
+Motor_accidents2 <- Motor_accidents2 %>%
+  filter(!is.na(BOROUGH) & BOROUGH != "")
+
+#First, for data preparation, I used the as.Date function to convert the crash.date column from character to date format. I then selected the columns I wanted and subsetted the data. Next, I removed the NAs from those columns and finally removed rows that did not list a borough.
+
+
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=TRUE}
+#Analyze accidents by Borough 
+
+# Count accidents by borough and percentage
+borough_counts <- Motor_accidents2 %>%
+  group_by(BOROUGH) %>%
+  summarise(
+    Accident.count = n(),
+    Percentage = (n() / nrow(Motor_accidents2)) * 100
+  )
+
+# Visualization
+library(ggplot2)
+
+ggplot(borough_counts, aes(x = BOROUGH, y = Percentage)) +
+  geom_bar(stat = "identity", fill = "blue") +
+  theme_minimal() +
+  labs(title = "Accidents Percentage by Borough", x = "Borough", y = "Percentage of Accidents")
+
+# I created a borough count to total the number of accidents per borough and provide the percentage breakdown. The results were as follows: Bronx had 41,788 (16.34%), Brooklyn had 83,901 (32.82%), Manhattan had 48,857 (19.11%), Queens had 71,345 (27.90%), and Staten Island had 9,710 (3.79%). From the bar plot, we see that Brooklyn has the highest number of accidents, followed by Queens, Manhattan, Bronx, and lastly, Staten Island.
+
+
+```
+
+
+
+
+```{r pressure2, echo=TRUE}
+
+#day_counts and percentages 
+days_counts <- Motor_accidents2 %>%
+  group_by(Daysoftheweek) %>%
+  summarise(
+    Accident.count = n(),
+    Percentage = (n() / nrow(Motor_accidents2)) * 100
+  )
+
+
+# Visualization
+ggplot(days_counts, aes(x = reorder(Daysoftheweek, -Percentage), y = Percentage)) +
+  geom_bar(stat = "identity", fill = "green") +
+  theme_minimal() +
+  labs(title = "Accidents by Day of the Week", x = "Day of the Week", y = "Percentage of Accidents") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# I then wanted to analyze whether certain days had more accidents. From the visualization, Tuesday had the highest number of accidents with 40,628 (15.89%), followed by Thursday with 38,091 (14.90%), Sunday with 38,044 (14.88%), Friday with 36,307 (14.20%), Saturday with 35,642 (13.94%), Wednesday with 33,965 (13.28%), and lastly Monday with 32,924 (12.88%).
+
+
+```
+
+
+
+```{r pressure3, echo=TRUE}
+
+#day_counts and percentages 
+Car_accident_factor <- Motor_accidents2 %>%
+  group_by(CONTRIBUTING.FACTOR.VEHICLE.1) %>%
+  summarise(
+    Accident.count = n(),
+    Percentage = (n() / nrow(Motor_accidents2)) * 100
+  ) %>%
+  filter(Accident.count > 10000)  # Filter for counts greater than 10,000
+
+ggplot(Car_accident_factor, aes(x = reorder(CONTRIBUTING.FACTOR.VEHICLE.1, -Percentage), y = Percentage)) +
+  geom_bar(stat = "identity", fill = "green") +
+  theme_minimal() +
+  labs(title = "Accidents by Contributing Factor", x = "Contributing Factor", y = "Percentage of Accidents") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+# I then wanted to explore the factors that caused the accidents. Since this is a large dataset, I focused on those with a count of 10,000 or more. The visualization showed that 'unspecified' had the highest number of accidents, with 66,461 (26.00%), followed by 'driver inattention/distraction' with 61,550 (24.08%), 'failure to yield right of way' with 19,396 (7.58%), 'following too closely' with 14,604 (5.71%), 'backing unsafely' with 13,724 (5.36%), 'passing too closely' with 11,540 (4.51%), and 'passing or lane usage improper' with 10,793 (4.22%).
+
+
+
+```
